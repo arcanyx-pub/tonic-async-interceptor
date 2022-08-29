@@ -1,14 +1,8 @@
 # Tonic Async Interceptor
 
-**IMPORTANT**: This crate currently relies on unpublished changes to the `tonic` crate, so you'll
-need to patch the crate with the current tonic repo until version > 0.8.0 is published, or else it
-won't compile. To patch, add this to the bottom of your `Cargo.toml`:
-
-```toml
-[patch.crates-io]
-# TODO: Delete me when tonic v0.8.1 is published!
-tonic = { git = "https://github.com/hyperium/tonic.git" }
-```
+**WARNING**: This crate currently relies on unpublished changes to the `tonic` crate, so it pulls
+`tonic` from an unofficial fork. This will be fixed as soon as `tonic` publishes a new
+version (after 0.8.0).
 
 This crate contains `AsyncInterceptor`, an async variant of Tonic's
 [`Interceptor`](https://docs.rs/tonic/latest/tonic/service/trait.Interceptor.html).
