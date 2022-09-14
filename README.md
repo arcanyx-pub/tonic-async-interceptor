@@ -1,9 +1,5 @@
 # Tonic Async Interceptor
 
-**WARNING**: This crate currently relies on unpublished changes to the `tonic` crate, so it pulls
-`tonic` from an unofficial fork. This will be fixed as soon as `tonic` publishes a new
-version (after 0.8.0).
-
 This crate contains `AsyncInterceptor`, an async variant of Tonic's
 [`Interceptor`](https://docs.rs/tonic/latest/tonic/service/trait.Interceptor.html).
 Other than accepting an async interceptor function, it works the same as `Interceptor`.
