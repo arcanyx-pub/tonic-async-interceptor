@@ -1,5 +1,9 @@
 # Tonic Async Interceptor
 
+[![Crates.io](https://img.shields.io/crates/v/tonic-async-interceptor)](https://crates.io/crates/tonic-async-interceptor)
+[![Documentation](https://docs.rs/tonic-async-interceptor/badge.svg)](https://docs.rs/tonic-async-interceptor)
+[![Crates.io](https://img.shields.io/crates/l/tonic-async-interceptor)](LICENSE)
+
 This crate contains `AsyncInterceptor`, an async variant of Tonic's
 [`Interceptor`](https://docs.rs/tonic/latest/tonic/service/trait.Interceptor.html).
 Other than accepting an async interceptor function, it works the same as `Interceptor`.
