@@ -4,13 +4,13 @@ authors = ["Joe Dahlquist <joe@arcanyx.com>"]
 categories = ["web-programming", "network-programming", "asynchronous", "authentication"]
 description = "Async variant of Tonic's interceptor function"
 documentation = "https://docs.rs/tonic-async-interceptor"
-edition = "2018"
+edition = "2021"
 homepage = "https://github.com/arcanyx-pub/tonic-async-interceptor"
 keywords = ["async", "grpc", "tonic", "protobuf", "interceptor"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/arcanyx-pub/tonic-async-interceptor"
-version = "0.1.0"
+version = "0.10.0"
 
 [dependencies]
 bytes = "1.0"
