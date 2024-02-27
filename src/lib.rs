@@ -253,9 +253,9 @@ where
 }
 
 // required to use `AsyncInterceptedService` with `Router`
-impl<S, F> tonic::transport::NamedService for AsyncInterceptedService<S, F>
+impl<S, F> tonic::server::NamedService for AsyncInterceptedService<S, F>
 where
-    S: tonic::transport::NamedService,
+    S: tonic::server::NamedService,
 {
     const NAME: &'static str = S::NAME;
 }
