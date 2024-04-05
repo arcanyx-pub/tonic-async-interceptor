@@ -248,7 +248,9 @@ where
     }
 
     fn call(&mut self, req: http::Request<ReqBody>) -> Self::Future {
-        AsyncResponseFuture::new(req, &mut self.f, self.inner.clone())
+        let clone = self.inner.clone();
+        let inner = std::mem::replace(&mut self.inner, clone);
+        AsyncResponseFuture::new(req, &mut self.f, inner)
     }
 }
 
