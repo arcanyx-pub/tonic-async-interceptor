@@ -248,8 +248,12 @@ where
     }
 
     fn call(&mut self, req: http::Request<ReqBody>) -> Self::Future {
+        // This is necessary because tonic internally uses `tower::buffer::Buffer`.
+        // See https://github.com/tower-rs/tower/issues/547#issuecomment-767629149
+        // for details on why this is necessary
         let clone = self.inner.clone();
         let inner = std::mem::replace(&mut self.inner, clone);
+
         AsyncResponseFuture::new(req, &mut self.f, inner)
     }
 }
