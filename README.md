@@ -11,6 +11,10 @@ Other than accepting an async interceptor function, it works the same as `Interc
 Async interceptor functions are useful for tasks like authentication, where you need to make
 asynchronous calls to another service or database within the interceptor.
 
+## Compatibility
+
+The major/minor version corresponds with that of Tonic; so, if you are using Tonic v0.12.x, then you should likewise use Tonic Async Interceptor v0.12.x.
+
 ## Usage
 
 ### Using with Tonic built-in Server/Router
