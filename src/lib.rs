@@ -3,8 +3,9 @@
 //! See [`Interceptor`] for more details.
 
 use bytes::Bytes;
-use http::{Method, Uri, Version};
+use http::{Extensions, Method, Uri, Version};
 use http_body::Body;
+use http_body_util::BodyExt;
 use pin_project::pin_project;
 use std::{
     fmt,
@@ -14,7 +15,7 @@ use std::{
     task::{Context, Poll},
 };
 use tonic::metadata::MetadataMap;
-use tonic::{body::BoxBody, Extensions, Request, Status};
+use tonic::{body::BoxBody, Request, Status};
 use tower_layer::Layer;
 use tower_service::Service;
 
@@ -152,7 +153,7 @@ fn request_into_http<Msg>(
     *request.method_mut() = method;
     *request.uri_mut() = uri;
     *request.headers_mut() = metadata.into_headers();
-    *request.extensions_mut() = extensions.into_http();
+    *request.extensions_mut() = extensions;
 
     request
 }
@@ -313,7 +314,7 @@ where
                 let response = status
                     .take()
                     .unwrap()
-                    .to_http()
+                    .into_http()
                     .map(|_| B::default())
                     .map(boxed);
                 Poll::Ready(Ok(response))
@@ -440,42 +441,15 @@ where
 
 #[cfg(test)]
 mod tests {
-    //#[allow(unused_imports)]
     use super::*;
-    use http::header::HeaderMap;
     use http::StatusCode;
-    use http_body::Body;
-    use std::{
-        future,
-        pin::Pin,
-        task::{Context, Poll},
-    };
+    use http_body_util::Empty;
+    use std::future;
     use tower::ServiceExt;
-
-    #[derive(Debug, Default)]
-    struct TestBody;
-
-    impl Body for TestBody {
-        type Data = Bytes;
-        type Error = Status;
-
-        fn poll_data(
-            self: Pin<&mut Self>,
-            _cx: &mut Context<'_>,
-        ) -> Poll<Option<Result<Self::Data, Self::Error>>> {
-            Poll::Ready(None)
-        }
-
-        fn poll_trailers(
-            self: Pin<&mut Self>,
-            _cx: &mut Context<'_>,
-        ) -> Poll<Result<Option<HeaderMap>, Self::Error>> {
-            Poll::Ready(Ok(None))
-        }
-    }
 
     #[tokio::test]
     async fn propagates_added_extensions() {
+        #[derive(Clone)]
         struct TestExtension {
             data: String,
         }
@@ -490,17 +464,17 @@ mod tests {
         });
 
         let svc = layer.layer(tower::service_fn(
-            |http_req: http::Request<TestBody>| async {
+            |http_req: http::Request<Empty<Bytes>>| async {
                 let req = Request::from_http(http_req);
                 let maybe_extension = req.extensions().get::<TestExtension>();
                 assert!(maybe_extension.is_some());
                 assert_eq!(maybe_extension.unwrap().data, test_extension_data);
 
-                Ok::<_, Status>(http::Response::new(TestBody))
+                Ok::<_, Status>(http::Response::new(Empty::new()))
             },
         ));
 
-        let request = http::Request::builder().body(TestBody).unwrap();
+        let request = http::Request::builder().body(Empty::new()).unwrap();
         let http_response = svc.oneshot(request).await.unwrap();
 
         assert_eq!(http_response.status(), StatusCode::OK);
@@ -519,17 +493,17 @@ mod tests {
         });
 
         let svc = layer.layer(tower::service_fn(
-            |http_req: http::Request<TestBody>| async {
+            |http_req: http::Request<Empty<Bytes>>| async {
                 let req = Request::from_http(http_req);
                 let maybe_metadata = req.metadata().get(test_metadata_key);
                 assert!(maybe_metadata.is_some());
                 assert_eq!(maybe_metadata.unwrap(), test_metadata_val);
 
-                Ok::<_, Status>(http::Response::new(TestBody))
+                Ok::<_, Status>(http::Response::new(Empty::new()))
             },
         ));
 
-        let request = http::Request::builder().body(TestBody).unwrap();
+        let request = http::Request::builder().body(Empty::new()).unwrap();
         let http_response = svc.oneshot(request).await.unwrap();
 
         assert_eq!(http_response.status(), StatusCode::OK);
@@ -549,7 +523,7 @@ mod tests {
         });
 
         let svc = layer.layer(tower::service_fn(
-            |request: http::Request<TestBody>| async move {
+            |request: http::Request<Empty<Bytes>>| async move {
                 assert_eq!(
                     request
                         .headers()
@@ -558,13 +532,13 @@ mod tests {
                     "test-tonic"
                 );
 
-                Ok::<_, Status>(http::Response::new(TestBody))
+                Ok::<_, Status>(http::Response::new(Empty::new()))
             },
         ));
 
         let request = http::Request::builder()
             .header("user-agent", "test-tonic")
-            .body(TestBody)
+            .body(Empty::new())
             .unwrap();
 
         svc.oneshot(request).await.unwrap();
@@ -573,17 +547,17 @@ mod tests {
     #[tokio::test]
     async fn handles_intercepted_status_as_response() {
         let message = "Blocked by the interceptor";
-        let expected = Status::permission_denied(message).to_http();
+        let expected = Status::permission_denied(message).into_http();
 
         let layer = async_interceptor(|_: Request<()>| {
             future::ready(Err(Status::permission_denied(message)))
         });
 
-        let svc = layer.layer(tower::service_fn(|_: http::Request<TestBody>| async {
-            Ok::<_, Status>(http::Response::new(TestBody))
+        let svc = layer.layer(tower::service_fn(|_: http::Request<Empty<Bytes>>| async {
+            Ok::<_, Status>(http::Response::new(Empty::new()))
         }));
 
-        let request = http::Request::builder().body(TestBody).unwrap();
+        let request = http::Request::builder().body(Empty::new()).unwrap();
         let response = svc.oneshot(request).await.unwrap();
 
         assert_eq!(expected.status(), response.status());
@@ -596,16 +570,16 @@ mod tests {
         let layer = async_interceptor(|request: Request<()>| future::ready(Ok(request)));
 
         let svc = layer.layer(tower::service_fn(
-            |request: http::Request<TestBody>| async move {
+            |request: http::Request<Empty<Bytes>>| async move {
                 assert_eq!(request.method(), http::Method::OPTIONS);
 
-                Ok::<_, Status>(http::Response::new(TestBody))
+                Ok::<_, Status>(http::Response::new(Empty::new()))
             },
         ));
 
         let request = http::Request::builder()
             .method(http::Method::OPTIONS)
-            .body(TestBody)
+            .body(Empty::new())
             .unwrap();
 
         svc.oneshot(request).await.unwrap();
