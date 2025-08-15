@@ -10,14 +10,14 @@ keywords = ["async", "grpc", "tonic", "protobuf", "interceptor"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/arcanyx-pub/tonic-async-interceptor"
-version = "0.13.0"
+version = "0.14.1"
 
 [dependencies]
 bytes = "1.0.0"
 http = "1.1.0"
 http-body = "1.0.0"
 pin-project = "1.1.0"
-tonic = "0.13.0"
+tonic = "0.14.1"
 tower-layer = "0.3.0"
 tower-service = "0.3.0"
 
